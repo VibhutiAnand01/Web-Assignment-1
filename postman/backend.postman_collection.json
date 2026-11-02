@@ -1,0 +1,345 @@
+{
+  "info": {
+    "name": "Backend tutorial",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000"
+    }
+  ],
+  "item": [
+    {
+      "name": "Register",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/v1/users/register",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"student_{{runId}}\",\n  \"email\": \"student_{{runId}}@example.test\",\n  \"password\": \"class-demo-123\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set('runId', pm.variables.replaceIn('{{$guid}}'));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Register', function () {",
+              "  pm.response.to.have.status(201);",
+              "  pm.expect(pm.response.json()).not.to.have.property('password');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject duplicate registration",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/v1/users/register",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"student_{{runId}}\",\n  \"email\": \"student_{{runId}}@example.test\",\n  \"password\": \"class-demo-123\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Reject duplicate registration', function () {",
+              "  pm.response.to.have.status(409);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject wrong password",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/v1/users/login",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"student_{{runId}}\",\n  \"password\": \"incorrect\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Reject wrong password', function () {",
+              "  pm.response.to.have.status(401);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/v1/users/login",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"student_{{runId}}\",\n  \"password\": \"class-demo-123\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Login', function () {",
+              "  pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create post",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/v1/posts/create",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Lab notes\",\n  \"description\": \"First API request\",\n  \"age\": 20\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Create post', function () {",
+              "  pm.response.to.have.status(201);",
+              "  pm.expect(pm.response.json().name).to.equal('Lab notes');",
+              "  pm.collectionVariables.set('postId', pm.response.json()._id);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Read posts",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/posts/getPosts",
+        "header": []
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Read posts', function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json().map(post => post._id)).to.include(pm.collectionVariables.get('postId'));",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject invalid age",
+      "request": {
+        "method": "PATCH",
+        "url": "{{baseUrl}}/api/v1/posts/update/{{postId}}",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"age\": 151\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Reject invalid age', function () {",
+              "  pm.response.to.have.status(400);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Update post",
+      "request": {
+        "method": "PATCH",
+        "url": "{{baseUrl}}/api/v1/posts/update/{{postId}}",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"description\": \"Edited lab notes\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Update post', function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json().description).to.equal('Edited lab notes');",
+              "  pm.expect(pm.response.json().age).to.equal(20);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Delete post",
+      "request": {
+        "method": "DELETE",
+        "url": "{{baseUrl}}/api/v1/posts/delete/{{postId}}",
+        "header": []
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Delete post', function () {",
+              "  pm.response.to.have.status(204);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Verify deletion",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/posts/getPosts",
+        "header": []
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Verify deletion', function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json().map(post => post._id)).not.to.include(pm.collectionVariables.get('postId'));",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject missing post",
+      "request": {
+        "method": "DELETE",
+        "url": "{{baseUrl}}/api/v1/posts/delete/{{postId}}",
+        "header": []
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Reject missing post', function () {",
+              "  pm.response.to.have.status(404);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Logout",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/v1/users/logout",
+        "header": []
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Logout', function () {",
+              "  pm.response.to.have.status(204);",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
